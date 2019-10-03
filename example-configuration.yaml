@@ -1,0 +1,17 @@
+mqtt:
+  host: 192.168.1.10
+  port: 1883
+  user: yourmqttuser
+  password: yoursecret
+  prefix: homeassistant
+
+devices:
+  raspberry:
+    platform: alsa
+    friendly_name: 'Raspberry Pi'
+    alsa_device: 'PCM'
+  tv:
+    platform: pt2259
+    friendly_name: 'TV'
+    i2c_bus: 1
+    i2c_address: '0x44'
