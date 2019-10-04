@@ -2,18 +2,12 @@
 
 import smbus
 import paho.mqtt.client as mqtt
+import yaml
 
 # Initial volume:
 default_volume: 0.8
 
-# MQTT configuration
-broker = '192.168.178.5'
-user = 'username'
-password = 'yoursecret'
-topic_prefix = 'homeassistant'
-
-# i2c configuration
-
+# Generic class to control audio volumes
 class VolumeControl:
 
   def __init__(self, id):
@@ -31,7 +25,16 @@ class VolumeControl:
     mqttc.publish(self.volume_topic, self.volume)
     mqttc.publish(self.mute_topic, self.muted)
 
-class PT2259VolumeControl(VolumeControl):
+# class PT2259VolumeControl(VolumeControl):
+
+def load_config:
+  # Read the configuration file
+  config_file = open('configuration.yaml', r)
+  # Parse the configuration into a dictionary
+  config = yaml.safe_load(config_file)
+  config_file.close
+  return config
+
 
 def on_message(client, userdata, message):
   payload = str(message.payload.decode("utf-8"))
@@ -39,7 +42,22 @@ def on_message(client, userdata, message):
   if topic == vc_set_topic:
     vc_set(payload)
 
-def vc_set(volume):
+## Main routine ##
+
+# Load the configuration file
+config = loadconfig()
+
+# Initialize the mqtt client
+mqttc = mqtt.Client()
+
+
+# Populate the device list
+
+# Loop
+
+
+
+
 
 # import smbus
 # bus = smbus.SMBus(1)
