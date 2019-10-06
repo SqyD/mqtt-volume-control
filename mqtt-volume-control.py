@@ -14,12 +14,15 @@ class VolumeControl:
   def __init__(self, device_id):
     self.id = device_id
     self.volume_topic = config['mqtt']['prefix'] + '/sensor/' + self.id + '/volume'
+    mqttc.subscribe(self.volume_topic + '/cmd')
     self.mute_topic = config['mqtt']['prefix'] + '/binary_sensor/' + self.id + '/mute'
+    mqttc.subscribe(self.mute_topic + '/cmd')
     self.muted = 'OFF'
     if default_volume in config['devices'][self.id]:
       self.volume_set(config['devices'][self.id]['default_volume'])
     else:
       self.volume_set(default_volume)
+    self.mute('OFF')
 
   # def discovery(self):
   
@@ -90,8 +93,21 @@ def load_config():
 def on_message(client, userdata, message):
   payload = str(message.payload.decode("utf-8"))
   topic = message.topic
-  if topic == vc_set_topic:
-    vc_set(payload)
+  for id, device in devices.items():
+    if topic == device.volume_topic + '/cmd':
+      if payload == 'UP':
+        device.volume_up()
+      elif payload == 'DOWN':
+        device.volume_down()
+      else:
+        volume = float(payload)
+        if (volume >= 0 and volume <= 1):
+          device.volume_set(volume)
+    elif topic == device.mute_topic + '/cmd':
+      if payload == 'OFF':
+        device.mute('OFF')
+      elif payload == 'ON':
+        device.mute('ON')
 
 ## Main routine ##
 
@@ -100,6 +116,9 @@ config = load_config()
 
 # Initialize the mqtt client
 mqttc = mqtt.Client()
+mqttc.username_pw_set(config['mqtt']['user'], config['mqtt']['password'])
+mqttc.on_message = on_message
+mqttc.connect(config['mqtt']['host'], config['mqtt']['port'])
 
 # Populate the device list
 devices = {}
@@ -111,11 +130,4 @@ for device_id, device_config in config['devices'].items():
   # devices[device_id].connect()
 
 # Loop
-
-
-# import smbus
-# bus = smbus.SMBus(1)
-# bus.write_byte(0x44,0xF0)
-# >>> bus.write_i2c_block_data(0x44,0x74,[0xE2,0xD0])
-# >>> bus.write_i2c_block_data(0x44,0x74,[0xE0,0xD0])
-# bus.write_i2c_block_data(0x44,0xF0,[0x74,0xE0,0xD0])
+mqttc.loop_forever()
